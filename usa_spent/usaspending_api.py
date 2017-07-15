@@ -13,9 +13,10 @@ class UsaSpendingService:
         self.base_url = 'https://api.usaspending.gov'
         self.endpoint_fields = {}
         self.results = []
+        self.record_count = 0
         self.result_keys = set([])
 
-    def search(self, endpoint, params={}):
+    def search(self, endpoint, fileloc, params={}):
         url = self.base_url + endpoint
 
         chunk = 10
@@ -48,7 +49,15 @@ class UsaSpendingService:
 
                 print('Page {} | {}'.format(item['page_metadata']['page'], item['page_metadata']['current']))
 
-            self.results.extend(self._flatten_json(json.loads(item)) for item in resp.response)
+            self.results = [self._flatten_json(json.loads(item)) for item in resp.response]
+
+            flat_results = [result for page in self.results if page for result in page]
+
+            self.results = flat_results
+
+            self.save_to_csv(fileloc)
+
+            self.record_count += len(self.results)
 
             try:
                 if json.loads(resp.response[-1]).get('page_metadata').get('has_next_page'):
@@ -58,13 +67,8 @@ class UsaSpendingService:
 
             except:
                 print('error!', resp.response[-1])
-                break
 
-        flat_results = [result for page in self.results if page for result in page]
-
-        self.results = flat_results
-
-        print('Completed data pull! {} records found'.format(len(self.results)))
+        print('Completed data pull! {} records found'.format(self.record_count))
 
     def _flatten_json(self, json_data):
         data = []
@@ -91,24 +95,7 @@ class UsaSpendingService:
 
     def save_to_csv(self, fileloc):
         keys = sorted(self.result_keys)
-        with open(fileloc, 'w', newline='', encoding="utf-8", errors='replace') as output_file:  #TODO - SAVE AS CHUNKS INSTEAD OF ALL AT ONCE
+        with open(fileloc, 'a+', newline='', encoding="utf-8", errors='replace') as output_file:  #TODO - SAVE AS CHUNKS INSTEAD OF ALL AT ONCE
             dict_writer = csv.DictWriter(output_file, keys)
             dict_writer.writeheader()
             dict_writer.writerows(self.results)
-
-
-# if __name__ == '__main__':
-#     usa = UsaSpendingService()
-#
-#     params = {
-#         'order': ["-federal_action_obligation"],
-#         'filters': [{
-#             'field': 'action_date',
-#             'operation': 'greater_than_or_equal',
-#             'value': ''
-#
-#         ]
-#     }}
-#
-#     endpoint = '/api/v1/transactions/'
-#     usa.search(endpoint)

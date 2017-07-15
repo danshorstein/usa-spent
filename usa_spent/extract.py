@@ -14,9 +14,9 @@ def main():
     params = PostParams(
             # fields=fields,
             filters=[
-                filter_('awarding_agency__toptier_agency__cgac_code',
-                        'equals',
-                        '070'),
+                # filter_('awarding_agency__toptier_agency__cgac_code',
+                #         'equals',
+                #         '070'),
                 filter_('action_date',
                         'less_than_or_equal',
                         '2017-03-15'),
@@ -28,9 +28,10 @@ def main():
 
     endpoint = '/api/v1/transactions/'
 
-    usa.search(endpoint=endpoint, params=params.params)
+    fileloc = r'C:\Users\dshorstein\Python\Projects\usa-spent\data\output.csv'
 
-    usa.save_to_csv(r'C:\Users\dshorstein\Python\Projects\usa-spent\data\output.csv')
+    usa.search(endpoint=endpoint, fileloc=fileloc, params=params.params)
+
 
 if __name__ == '__main__':
     main()
