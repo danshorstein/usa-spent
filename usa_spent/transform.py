@@ -2,11 +2,18 @@ import pandas as pd
 
 def main():
 
+
+
+
+
+
+
+
     fileloc = r'C:\Users\dshorstein\Python\Projects\usa-spent\data\output.xlsx'
 
     df = pd.read_excel(fileloc, sheetname='output')
 
-    df['TRANSACTION_TYPE'] = df.type.apply(contract_type)
+    df['TRANSACTION_TYPE'] = df.type.apply(get_transaction_type)
 
     grouped = df[['type_description', 'TRANSACTION_TYPE', 'federal_action_obligation']].groupby(['TRANSACTION_TYPE', 'type_description']).sum()
 
@@ -23,7 +30,7 @@ def main():
     print(grant_dollars)
 
 
-def contract_type(char):
+def get_transaction_type(char): # TODO - add one / two loan types
     if isinstance(char, int):
         return 'grant'
     elif isinstance(char, str):

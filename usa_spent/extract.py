@@ -19,16 +19,16 @@ def main():
                 #         '070'),
                 filter_('action_date',
                         'less_than_or_equal',
-                        '2017-03-15'),
+                        '2017-03-31'),
                 filter_('action_date',
                         'greater_than_or_equal',
-                        '2017-03-01')
+                        '2017-03-30')
             ],
         )
 
     endpoint = '/api/v1/transactions/'
 
-    fileloc = r'C:\Users\dshorstein\Python\Projects\usa-spent\data\output.csv'
+    fileloc = r'C:\Users\dshorstein\Python\Projects\usa-spent\data\output.json'
 
     usa.search(endpoint=endpoint, fileloc=fileloc, params=params.params)
 

@@ -14,7 +14,8 @@ class UsaSpendingService:
         self.endpoint_fields = {}
         self.results = []
         self.record_count = 0
-        self.result_keys = set([])
+        self.result_keys = []
+        self.first_line = True
 
     def search(self, endpoint, fileloc, params={}):
         url = self.base_url + endpoint
@@ -49,13 +50,17 @@ class UsaSpendingService:
 
                 print('Page {} | {}'.format(item['page_metadata']['page'], item['page_metadata']['current']))
 
-            self.results = [self._flatten_json(json.loads(item)) for item in resp.response]
+            # self.results = [self._flatten_json(json.loads(item)) for item in resp.response]
+
+            self.results = [json.loads(item).get('results') for item in resp.response]
 
             flat_results = [result for page in self.results if page for result in page]
 
             self.results = flat_results
 
-            self.save_to_csv(fileloc)
+            self.save_raw_json(fileloc)
+
+            # self.save_dict_to_csv(fileloc)
 
             self.record_count += len(self.results)
 
@@ -67,35 +72,44 @@ class UsaSpendingService:
 
             except:
                 print('error!', resp.response[-1])
+                start_page += chunk
 
         print('Completed data pull! {} records found'.format(self.record_count))
 
-    def _flatten_json(self, json_data):
-        data = []
-        results = json_data.get('results')
-        if not results:
-            return None
+    # def _flatten_json(self, json_data):
+    #     data = []
+    #     results = json_data.get('results')
+    #     if not results:
+    #         return None
+    #
+    #     for record in results:
+    #         record_data = {}
+    #         for key, val in record.items():
+    #             if not isinstance(val, dict):
+    #                 record_data[key] = val
+    #             else:
+    #                 for subkey, subval in val.items():
+    #                     if not isinstance(subval, dict):
+    #                         record_data['{}__{}'.format(key, subkey)] = subval
+    #                     else:
+    #                         for subsubkey, subsubval in subval.items():
+    #                             record_data['{}__{}__{}'.format(key, subkey, subsubkey)] = subsubval
+    #         data.append(record_data)
+    #         [self.result_keys.append(key) for key in record_data.keys() if key not in self.result_keys]
+    #
+    #     return data
 
-        for record in results:
-            record_data = {}
-            for key, val in record.items():
-                if not isinstance(val, dict):
-                    record_data[key] = val
-                else:
-                    for subkey, subval in val.items():
-                        if not isinstance(subval, dict):
-                            record_data['{}__{}'.format(key, subkey)] = subval
-                        else:
-                            for subsubkey, subsubval in subval.items():
-                                record_data['{}__{}__{}'.format(key, subkey, subsubkey)] = subsubval
-            data.append(record_data)
-            [self.result_keys.add(key) for key in record_data.keys()]
+    #
+    # # TODO - MAKE HEADER ONLY WRITTEN ONCE or NONE... and tack on new fields to end using SET; write separate csv file
+    # def save_dict_to_csv(self, fileloc):
+    #     keys = self.result_keys
+    #     with open(fileloc, 'a+', newline='', encoding="utf-8", errors='replace') as output_file:
+    #         dict_writer = csv.DictWriter(output_file, keys)
+    #         if self.first_line:
+    #             dict_writer.writeheader()
+    #             self.first_line = False
+    #         dict_writer.writerows(self.results)
 
-        return data
-
-    def save_to_csv(self, fileloc):
-        keys = sorted(self.result_keys)
-        with open(fileloc, 'a+', newline='', encoding="utf-8", errors='replace') as output_file:  #TODO - SAVE AS CHUNKS INSTEAD OF ALL AT ONCE
-            dict_writer = csv.DictWriter(output_file, keys)
-            dict_writer.writeheader()
-            dict_writer.writerows(self.results)
+    def save_raw_json(self, fileloc):
+        with open(fileloc, "a+") as output:
+            print(self.results, output)
