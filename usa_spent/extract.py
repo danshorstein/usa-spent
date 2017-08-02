@@ -1,5 +1,6 @@
-from usa_spent.usa_params import PostParams
-from usa_spent.usaspending_api import UsaSpendingService
+import os
+from usa_params import PostParams
+from usaspending_api import UsaSpendingService
 
 
 # TODO - add error reporting and handling when usaspending API has issues
@@ -28,7 +29,13 @@ def main():
 
     endpoint = '/api/v1/transactions/'
 
-    fileloc = r'C:\Users\dshorstein\Python\Projects\usa-spent\data\output.json'
+    #fileloc = r'C:\Users\dshorstein\Python\Projects\usa-spent\data\output.json'
+
+    # If you need absolute pathnames you can disregard this
+    if not os.path.exists(os.getcwd() + "\\data"):
+        os.mkdir(os.getcwd() + "\\data")
+
+    fileloc = os.getcwd() + "\\data\\output.json"
 
     usa.search(endpoint=endpoint, fileloc=fileloc, params=params.params)
 

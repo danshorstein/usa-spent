@@ -1,7 +1,7 @@
 import json
 import csv
 
-from usa_spent.async_requests import AsyncPost, AsyncResponses
+from async_requests import AsyncPost, AsyncResponses
 
 
 #TODO - write outputs in chunks to file, to reduce memory impact
@@ -22,6 +22,7 @@ class UsaSpendingService:
 
         chunk = 10
         start_page = 1
+        page_index = start_page
 
         headers = {'content-type': 'application/json'}
 
@@ -54,9 +55,18 @@ class UsaSpendingService:
 
             self.results = [json.loads(item).get('results') for item in resp.response]
 
+            pages_dict = {}
+            for page in self.results:
+                transactions = {}
+                if page:
+                    for item in page:
+                        transactions[item["id"]] = item
+                    pages_dict[("page-" + str(page_index))] = transactions
+                    page_index += 1
+
             flat_results = [result for page in self.results if page for result in page]
 
-            self.results = flat_results
+            self.results = pages_dict
 
             self.save_raw_json(fileloc)
 
@@ -111,5 +121,17 @@ class UsaSpendingService:
     #         dict_writer.writerows(self.results)
 
     def save_raw_json(self, fileloc):
-        with open(fileloc, "a+") as output:
-            print(self.results, output)
+        # This is a conventional way to append to json, but you could do a more hack-y approach if runtime suffers
+        # Though realistically, network operations almost always dominate runtime
+        with open(fileloc) as input_file:
+            data = json.load(input_file)
+
+        data.update(self.results)
+        #for result in self.results:
+        #    data.update(result)
+
+        with open(fileloc, 'w') as output_file:
+            json.dump(data, output_file)
+
+
+            #print(self.results, output)
