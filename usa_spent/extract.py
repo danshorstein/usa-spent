@@ -1,12 +1,13 @@
 import os
-from usa_params import PostParams
-from usaspending_api import UsaSpendingService
+from usa_spent.usa_params import PostParams
+from usa_spent.usaspending_api import UsaSpendingService
 
 
-# TODO - add error reporting and handling when usaspending API has issues
+def extract(start_date, ending_date, file_loc):
 
-def main():
-    fields = ['contract_data', 'federal_action_obligation']
+    # fields = ['contract_data', 'federal_action_obligation']
+
+    endpoint = '/api/v1/transactions/'
 
     usa = UsaSpendingService()
 
@@ -20,25 +21,26 @@ def main():
                 #         '070'),
                 filter_('action_date',
                         'less_than_or_equal',
-                        '2017-03-31'),
+                        ending_date),
                 filter_('action_date',
                         'greater_than_or_equal',
-                        '2017-03-30')
+                        start_date)
             ],
         )
 
-    endpoint = '/api/v1/transactions/'
-
-    #fileloc = r'C:\Users\dshorstein\Python\Projects\usa-spent\data\output.json'
-
-    # If you need absolute pathnames you can disregard this
-    if not os.path.exists(os.getcwd() + "\\data"):
-        os.mkdir(os.getcwd() + "\\data")
-
-    fileloc = os.getcwd() + "\\data\\output.json"
-
-    usa.search(endpoint=endpoint, fileloc=fileloc, params=params.params)
+    usa.search(endpoint=endpoint, fileloc=file_loc, params=params.params)
 
 
 if __name__ == '__main__':
-    main()
+
+
+
+    data_path = os.path.abspath(os.path.join(os.getcwd(), '..', 'data'))
+
+    if not os.path.exists(data_path):
+        os.mkdir(data_path)
+
+    file_loc = os.path.join(data_path, 'output.csv')
+
+
+    extract('2017-03-30', '2017-03-31', file_loc)
